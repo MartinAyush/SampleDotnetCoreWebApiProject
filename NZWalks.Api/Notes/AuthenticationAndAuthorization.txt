@@ -1,0 +1,90 @@
+﻿***** Authentication Flow  *****
+
+1. User login into the system using credentials(id and password).
+
+2. If user is authenticated the system will respond with a token
+
+3. This token will be used to communicate with the APIs.
+
+***** How to add Authentication And Authorization into the WEB API *****
+
+STEP 1: Setting up Authentication
+1. Install below packages into the API project
+Microsoft.AspNetCore.Authentication.JwtBearer
+Microsoft.IdentityModel.Tokens
+System.IdentityModel.Tokens.Jwt
+Microsoft.AspNetCore.Identity.EntityFrameworkCore
+
+2. Configure appsettings.json file => To find Issuer and Audience => Properties > Debug > General > Open debug launch profile UI > App url
+"Jwt": {
+    "Key": "asdfasdfas0df87a0s9d8f70ASD087FA0S9D87F0AS8D7F0sdfasdf0987098asdf",
+    "Issuer": "https://localhost:7171",
+    "Audience": "https://localhost:7171"
+  }
+
+3. Configure following in program.cs
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateLifetime = true,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    });
+
+4. * Just before authorization: [In middleware pipeline]
+    app.UseAuthentication();
+
+
+STEP 2: Setting up Identity DbContext
+
+1. Add new database for users
+    - Add connection string in the appsettings.json file
+    - make a db context and inherit it from IdentityDbContext
+    - add dbcontext to builder.service
+
+2. Seed roles into the db
+    - Override onModelCreating method and create IdentityUsers
+   
+3. Run Entity Framework core migration
+
+STEP 3: Setting up Identity in application
+
+1. In Program.cs file:
+
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("NZWalks")
+    .AddEntityFrameworkStores<NZWalksAuthDbContext>()
+    .AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
+});
+
+STEP 4: Create Auth Controller and RegisterUser ActionMethod
+
+- Use the UserManager class to create or manage users or assign roles to the user.
+- Create a new ActionMethod and retrieve the required fields from the requestDTO, which include username, email, and password.
+- Create a new user using the userManager.CreateAsync method.
+- If the user is created, assign roles to this user; otherwise, return a bad request.
+
+STEP 5: Create JWT Token
+
+- Create a token repository.
+- Add code to generate a JWT token.
+
+STEP 6: Add Role-based Authorization
+
+In the Authorize attribute, specify the roles.
+For example: [Authorize(Roles = "Reader,Writer")]

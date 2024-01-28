@@ -1,0 +1,5 @@
+﻿Step 1: - Name the migration
+Add-Migration "Migration Message"
+
+Step 2: - Make the changes into the database
+Update-Database

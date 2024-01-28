@@ -1,0 +1,14 @@
+﻿1. Add swashbucke nuget package in API project of solution
+2. Add below lines into the program.cs file
+
+* After builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+* After builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
